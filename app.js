@@ -2,16 +2,20 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 require("dotenv").config();
+
 const balanceRouter = require("./routes/startBalance");
-const transactionRouter = require("./routes/transactions");
+const usersRouter = require("./routes/users");
 
 const app = express();
 
 app.use(cors());
 app.use(morgan("dev"));
 app.use(express.json());
+
+app.use('/api/users', usersRouter);
 app.use("/currentBalance", balanceRouter);
-app.use("/transactions", transactionRouter);
+
+
 app.use((req, res) => {
   res.status(404).json({ message: "Not found" });
 });

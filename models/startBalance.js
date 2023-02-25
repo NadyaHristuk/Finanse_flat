@@ -11,6 +11,10 @@ const startBalanceSchema = Schema({
   month: Number,
   previousDayLimit: { type: Number, default: 0 },
   monthLimit: { type: Number, default: 0 },
+  owner: {
+    type: Schema.Types.ObjectId,
+    ref: 'user',
+  },
 });
 
 const startBalance = model("startBalance", startBalanceSchema);
