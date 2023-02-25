@@ -1,32 +1,75 @@
-const transaction = require("../models/transactions");
-const startBalance = require("../models/startBalance");
 const moment = require("moment");
+const Transaction = require("../models/transaction");
+const { find } = require("../models/user");
+const User = require("../models/user");
 
-const createTransaction = async (req, res) => {
-  const { category, description, cardBalance, cardName, sum } = req.body;
-  const { id } = req.params;
-  const transactionData = await transaction.create({
+async function createTransaction(req, res) {
+  const { category, coment, sum } = req.body;
+  const { _id, balance } = req.user;
+  const newTransaction = await Transaction.create({
     category,
-    description,
-    cardBalance,
-    cardName,
+    coment,
     sum,
+    owner: _id,
   });
-  const currentBalance = await startBalance.findById(id);
-  const days = moment().daysInMonth();
-  const monthLimit =
-    currentBalance.bothSalary * (currentBalance.percentagePerMounth / 100);
-  const dailyLimit = currentBalance.previousDayLimit + monthLimit / days;
-  const currentLimit = currentBalance.previousDayLimit + sum;
-  const updateBalance = await startBalance.findByIdAndUpdate(
-    id,
-    {
-      previousDayLimit: currentLimit,
-      monthLimit: monthLimit - currentLimit,
-    },
-    { new: true }
-  );
-  res.json({ updateBalance, transactionData });
-};
+  await User.findByIdAndUpdate(_id, {
+    balance: balance - sum,
+  });
+  res.json(newTransaction);
+}
 
-module.exports = { createTransaction };
+async function getTransaction(req, res) {
+  const { year, month } = req.query;
+  const { _id } = req.user;
+
+    const transactionByMonth = await Transaction.find({
+        owner: _id,
+        month, year
+    });
+    res.json(transactionByMonth);
+}
+
+async function puchTransaction(req, res) {
+    const { id } = req.params;
+    const transactionUpdate = await Transaction.findByIdAndUpdate(
+        id, {...req.body}, {new: true}
+    )
+    res.json(transactionUpdate);
+}
+
+async function transactionDelete(req, res) {
+    const { id } = req.params;
+    const transactionRemove = await Transaction.findByIdAndDelete(id);
+    res.json(transactionRemove);
+}
+
+async function transactionByCategory(req, res) {
+    const { year, month } = req.params;
+    const { _id } = req.user;
+
+    const result = await Transaction.aggregate([{
+        $match: {
+            owner: _id,
+            year: year,
+            month: month,
+        },
+    },
+        {
+            $group: {
+                _id: "$category",
+                amount: {
+                    $sum: "$sum"
+                }
+            }
+        }
+    ])
+    res.json(result);
+}
+
+module.exports = {
+  createTransaction,
+  getTransaction,
+  puchTransaction,
+  transactionDelete,
+  transactionByCategory,
+};

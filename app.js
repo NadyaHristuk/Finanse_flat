@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const balanceRouter = require("./routes/startBalance");
 const usersRouter = require("./routes/users");
+const transactionRouter = require('./routes/transaction');
 
 const app = express();
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use('/api/users', usersRouter);
 app.use("/currentBalance", balanceRouter);
+app.use ('/transaction', transactionRouter) ;
 
 
 app.use((req, res) => {
