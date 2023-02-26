@@ -7,6 +7,7 @@ const byMonth = async (req, res) => {
   const { _id } = req.user;
   const { month, year } = req.query;
   const balance = await startBalance.findOne({ owner: _id });
+  
   const totalByMounth = await Transaction.aggregate([
     {
       $match: {
